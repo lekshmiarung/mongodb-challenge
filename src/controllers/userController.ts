@@ -1,60 +1,129 @@
-import { User, Application } from '../models/index.js';
 import { Request, Response } from 'express';
+import User from '../models/User';
+import Thought from '../models/Thought';
 
-
-  // Get all users
-  export const getUsers = async (_req: Request, res: Response) => {
-    try {
-      const users = await User.find();
-      res.json(users);
-    } catch (err) {
-      res.status(500).json(err);
-    }
+// Get all users
+export const getUsers = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const users = await User.find();
+    res.status(200).json(users);
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    res.status(500).json({ message: "Unable to retrieve users" });
   }
+};
+// Get a single user by _id, populate thoughts and friends
+export const getSingleUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = await User.findById(req.params.userId)
+      .populate('thoughts')
+      .populate('friends')
+      .select('-__v');
 
-  // Get a single user
-  export const getSingleUser = async (req: Request, res: Response) => {
-    try {
-      const user = await User.findOne({ _id: req.params.userId })
-        .select('-__v');
-
-      if (!user) {
-        return res.status(404).json({ message: 'No user with that ID' });
-      }
-
-      res.json(user);
-      return;
-    } catch (err) {
-      res.status(500).json(err);
+    if (!user) {
+      res.status(404).json({ message: 'No user with that ID' });
       return;
     }
+    res.status(200).json(user);
+  } catch (err) {
+    console.error("Error fetching user:", err);
+    res.status(500).json({ message: "Unable to retrieve user" });
   }
+};
 
-  // create a new user
-  export const createUser = async (req: Request, res: Response) => {
-    try {
-      const user = await User.create(req.body);
-      res.json(user);
-    } catch (err) {
-      res.status(500).json(err);
-    }
+// Create a new user
+export const createUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = await User.create(req.body);
+    res.status(201).json(user);
+  } catch (err) {
+    console.error("Error creating user:", err);
+    res.status(500).json({ message: "Unable to create user" });
   }
+};
 
-  // Delete a user and associated apps
-  export const deleteUser = async (req: Request, res: Response) => {
-    try {
-      const user = await User.findOneAndDelete({ _id: req.params.userId });
+// Update a user by _id
+export const updateUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = await User.findByIdAndUpdate(req.params.userId, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
-      if (!user) {
-        return res.status(404).json({ message: 'No user with that ID' });
-      }
-
-      await Application.deleteMany({ _id: { $in: user.applications } });
-      res.json({ message: 'User and associated apps deleted!' })
+    if (!user) {
+      res.status(404).json({ message: 'No user with that ID' });
       return;
-    } catch (err) {
-      res.status(500).json(err);
+    }
+    res.status(200).json(user);
+  } catch (err) {
+    console.error("Error updating user:", err);
+    res.status(500).json({ message: "Unable to update user" });
+  }
+};
+
+// Delete a user by _id and associated thoughts
+export const deleteUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.userId);
+    if (!user) {
+      res.status(404).json({ message: 'No user with that ID' });
       return;
     }
+
+    // Delete all thoughts associated with the user
+    const deletedThoughts = await Thought.deleteMany({ username: user.username });
+    res.status(200).json({
+      message: 'User and associated thoughts deleted successfully!',
+      deletedThoughtsCount: deletedThoughts.deletedCount,
+    });
+  } catch (err) {
+    console.error("Error deleting user and thoughts:", err);
+    res.status(500).json({ message: "Unable to delete user and associated thoughts" });
   }
+};
+// Add a friend to the user's friend list
+export const addFriend = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { userId, friendId } = req.params;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $addToSet: { friends: friendId } }, // $addToSet prevents duplicates
+      { new: true }
+    ).populate('friends');
+
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    res.status(200).json({ message: 'Friend added successfully', user });
+  } catch (err) {
+    console.error("Error adding friend:", err);
+    res.status(500).json({ message: 'Unable to add friend' });
+  }
+};
+
+// Remove a friend from the user's friend list
+export const removeFriend = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { userId, friendId } = req.params;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $pull: { friends: friendId } }, // $pull removes friendId from friends array
+      { new: true }
+    ).populate('friends');
+
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    res.status(200).json({ message: 'Friend removed successfully', user });
+  } catch (err) {
+    console.error("Error removing friend:", err);
+    res.status(500).json({ message: 'Unable to remove friend' });
+  }
+};
 

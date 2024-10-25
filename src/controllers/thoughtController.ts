@@ -1,149 +1,108 @@
-import { Application, User } from '../models/index.js';
 import { Request, Response } from 'express';
+import Thought from '../models/Thought';
+import User from '../models/User';
 
-
-  // TODO: Add comments to the functionality of the getApplications method
-  export const getApplications = async (_req: Request, res: Response) => {
-    try {
-      const applications = await Application.find();
-      res.json(applications);
-    } catch (err) {
-      res.status(500).json(err);
-    }
+// Get all thoughts
+export const getThoughts = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const thoughts = await Thought.find();
+    res.json(thoughts);
+  } catch (err) {
+    res.status(500).json(err);
   }
+};
 
-  // TODO: Add comments to the functionality of the getSingleApplication method
-  export const getSingleApplication = async (req: Request, res: Response) => {
-    try {
-      const application = await Application.findOne({ _id: req.params.applicationId });
-
-      if (!application) {
-        return res.status(404).json({ message: 'No application with that ID' });
-      }
-
-      res.json(application);
-      return;
-    } catch (err) {
-      res.status(500).json(err);
+// Get a single thought by its _id
+export const getSingleThought = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const thought = await Thought.findById(req.params.thoughtId);
+    if (!thought) {
+      res.status(404).json({ message: 'No thought with that ID' });
       return;
     }
+    res.json(thought);
+  } catch (err) {
+    res.status(500).json(err);
   }
+};
 
-// TODO: Add comments to the functionality of the createApplication method
-  export const createApplication = async (req: Request, res: Response) => {
-    try {
-      const application = await Application.create(req.body);
-      const user = await User.findOneAndUpdate(
-        { _id: req.body.userId },
-        { $addToSet: { applications: application._id } },
-        { new: true }
-      );
+// Create a new thought and associate it with a user
+export const createThought = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { thoughtText, username, userId } = req.body;
+    const thought = await Thought.create({ thoughtText, username });
 
-      if (!user) {
-        return res.status(404).json({
-          message: 'Application created, but found no user with that ID',
-        })
-      }
+    await User.findByIdAndUpdate(userId, { $push: { thoughts: thought._id } });
 
-      res.json('Created the application 🎉');
-      return;
-    } catch (err) {
-      console.log(err);
-      res.status(500).json(err);
+    res.json(thought);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+};
+
+// Update a thought by its _id
+export const updateThought = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const thought = await Thought.findByIdAndUpdate(req.params.thoughtId, req.body, { new: true });
+    if (!thought) {
+      res.status(404).json({ message: 'No thought with that ID' });
       return;
     }
+    res.json(thought);
+  } catch (err) {
+    res.status(500).json(err);
   }
-  
-  // TODO: Add comments to the functionality of the updateApplication method
-  export const updateApplication = async (req: Request, res: Response) => {
-    try {
-      const application = await Application.findOneAndUpdate(
-        { _id: req.params.applicationId },
-        { $set: req.body },
-        { runValidators: true, new: true }
-      );
+};
 
-      if (!application) {
-        return res.status(404).json({ message: 'No application with this id!' });
-      }
-
-      res.json(application);
-      return;
-    } catch (err) {
-      console.log(err);
-      res.status(500).json(err);
+// Delete a thought by its _id
+export const deleteThought = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const thought = await Thought.findByIdAndDelete(req.params.thoughtId);
+    if (!thought) {
+      res.status(404).json({ message: 'No thought with that ID' });
       return;
     }
+
+    await User.updateMany({ thoughts: thought._id }, { $pull: { thoughts: thought._id } });
+
+    res.json({ message: 'Thought deleted successfully' });
+  } catch (err) {
+    res.status(500).json(err);
   }
+};
 
-  // TODO: Add comments to the functionality of the deleteApplication method
-  export const deleteApplication = async (req: Request, res: Response) => {
-    try {
-      const application = await Application.findOneAndDelete({ _id: req.params.applicationId });
-
-      if (!application) {
-        return res.status(404).json({ message: 'No application with this id!' });
-      }
-
-      const user = await User.findOneAndUpdate(
-        { applications: req.params.applicationId },
-        { $pull: { applications: req.params.applicationId } },
-        { new: true }
-      );
-
-      if (!user) {
-        return res.status(404).json({
-          message: 'Application created but no user with this id!',
-        });
-      }
-
-      res.json({ message: 'Application successfully deleted!' });
-      return;
-    } catch (err) {
-      res.status(500).json(err);
+// Add a reaction to a thought
+export const addReaction = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const thought = await Thought.findByIdAndUpdate(
+      req.params.thoughtId,
+      { $push: { reactions: req.body } },
+      { new: true }
+    );
+    if (!thought) {
+      res.status(404).json({ message: 'No thought with that ID' });
       return;
     }
+    res.json(thought);
+  } catch (err) {
+    res.status(500).json(err);
   }
+};
 
-   // TODO: Add comments to the functionality of the addTag method
-  export const addTag = async (req: Request, res: Response) => {
-    try {
-      const application = await Application.findOneAndUpdate(
-        { _id: req.params.applicationId },
-        { $addToSet: { tags: req.body } },
-        { runValidators: true, new: true }
-      );
-
-      if (!application) {
-        return res.status(404).json({ message: 'No application with this id!' });
-      }
-
-      res.json(application);
-      return;
-    } catch (err) {
-      res.status(500).json(err);
+// Remove a reaction by reactionId from a thought
+export const removeReaction = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const thought = await Thought.findByIdAndUpdate(
+      req.params.thoughtId,
+      { $pull: { reactions: { _id: req.params.reactionId } } },
+      { new: true }
+    );
+    if (!thought) {
+      res.status(404).json({ message: 'No thought with that ID' });
       return;
     }
+    res.json(thought);
+  } catch (err) {
+    res.status(500).json(err);
   }
-
-  // TODO: Add comments to the functionality of the addTag method
-  export const removeTag = async (req: Request, res: Response) => {
-    try {
-      const application = await Application.findOneAndUpdate(
-        { _id: req.params.applicationId },
-        { $pull: { tags: { tagId: req.params.tagId } } },
-        { runValidators: true, new: true }
-      );
-
-      if (!application) {
-        return res.status(404).json({ message: 'No application with this id!' });
-      }
-
-      res.json(application);
-      return;
-    } catch (err) {
-      res.status(500).json(err);
-      return;
-    }
-  }
-
+};

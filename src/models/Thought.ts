@@ -1,25 +1,43 @@
-import { Schema, Types, Document, ObjectId } from 'mongoose';
+import { Schema, model, Document, Types } from 'mongoose';
+import moment from 'moment';
 
-interface ITag extends Document { 
-  tagId: ObjectId;
-  tagBody: string;
+// Reaction Interface
+export interface IReaction {
+  reactionId: Types.ObjectId;
+  reactionBody: string;
+  username: string;
   createdAt: Date;
 }
 
-const tagSchema = new Schema<ITag>(
+// Thought Interface
+export interface IThought extends Document {
+  thoughtText: string;
+  createdAt: Date;
+  username: string;
+  reactions: IReaction[];
+  reactionCount?: number;
+}
+
+// Reaction Schema (subdocument)
+const reactionSchema = new Schema<IReaction>(
   {
-    tagId: {
+    reactionId: {
       type: Schema.Types.ObjectId,
       default: () => new Types.ObjectId(),
     },
-    tagBody: {
+    reactionBody: {
       type: String,
       required: true,
-      maxlength: 25,
+      maxLength: 280,
+    },
+    username: {
+      type: String,
+      required: true,
     },
     createdAt: {
       type: Date,
       default: Date.now,
+      get: (timestamp: Date) => moment(timestamp).format('MMM DD, YYYY [at] hh:mm a'),
     },
   },
   {
@@ -30,4 +48,40 @@ const tagSchema = new Schema<ITag>(
   }
 );
 
-export default tagSchema;
+// Thought Schema
+const thoughtSchema = new Schema<IThought>(
+  {
+    thoughtText: {
+      type: String,
+      required: true,
+      minLength: 1,
+      maxLength: 280,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+      get: (timestamp: Date) => moment(timestamp).format('MMM DD, YYYY [at] hh:mm a'),
+    },
+    username: {
+      type: String,
+      required: true,
+    },
+    reactions: [reactionSchema],  // Array of reaction subdocuments
+  },
+  {
+    toJSON: {
+      virtuals: true,
+      getters: true,
+    },
+    id: false,
+  }
+);
+
+// Virtual to count reactions
+thoughtSchema.virtual('reactionCount').get(function (this: IThought) {
+  return this.reactions.length;
+});
+
+const Thought = model<IThought>('Thought', thoughtSchema);
+
+export default Thought;
