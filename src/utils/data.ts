@@ -1,111 +1,52 @@
 const names = [
-  'Aaran',
-  'Aaren',
-  'Aarez',
-  'Aarman',
-  'Aaron',
-  'Aaron-James',
-  'Aarron',
-  'Aaryan',
-  'Aaryn',
-  'Aayan',
-  'Aazaan',
-  'Abaan',
-  'Abbas',
-  'Abdallah',
-  'Abdalroof',
-  'Abdihakim',
-  'Abdirahman',
-  'Abdisalam',
-  'Abdul',
-  'Abdul-Aziz',
-  'Abdulbasir',
-  'Abdulkadir',
-  'Abdulkarem',
-  'Smith',
-  'Jones',
-  'Coollastname',
-  'enter_name_here',
-  'Ze',
-  'Zechariah',
-  'Zeek',
-  'Zeeshan',
-  'Zeid',
-  'Zein',
-  'Zen',
-  'Zendel',
-  'Zenith',
-  'Zennon',
-  'Zeph',
-  'Zerah',
-  'Zhen',
-  'Zhi',
-  'Zhong',
-  'Zhuo',
-  'Zi',
-  'Zidane',
-  'Zijie',
-  'Zinedine',
-  'Zion',
-  'Zishan',
-  'Ziya',
-  'Ziyaan',
-  'Zohaib',
-  'Zohair',
-  'Zoubaeir',
-  'Zubair',
-  'Zubayr',
-  'Zuriel',
-  'Xander',
-  'Jared',
+  'John',
+  'Jane',
+  'Alice',
+  'Bob',
+  'Charlie',
+  'David',
+  'Eve',
+  'Frank',
   'Grace',
-  'Alex',
-  'Mark',
-  'Tamar',
-  'Farish',
-  'Sarah',
-  'Nathaniel',
-  'Parker',
+  'Heidi'
 ];
 
-const appDescriptions = [
-  'Decision Tracker',
-  'Find My Phone',
-  'Learn Piano',
-  'Starbase Defender',
-  'Tower Defense',
-  'Monopoly Money Manager',
-  'Movie trailers',
-  'Hello world',
-  'Stupid Social Media App',
-  'Notes',
-  'Messages',
-  'Email',
-  'Compass',
-  'Firefox',
-  'Running app',
-  'Cooking app',
-  'Poker',
-  'Deliveries',
+
+// create thought text
+
+const ThoughtDescription = [
+  'This is a thought about a decision tracker',
+  'This is a thought about finding my phone',
+  'This is a thought about learning piano',
+  'This is a thought about a starbase defender',
+  'This is a thought about a tower defense',
+  'This is a thought about a monopoly money manager',
+  'This is a thought about movie trailers',
+  'This is a thought about hello world',
+  'This is a thought about a stupid social media app',
+  'This is a thought about notes',
+  'This is a thought about messages',
+  'This is a thought about email',
+  'This is a thought about a compass',
+  'This is a thought about Firefox',
+  'This is a thought about a running app',
+  'This is a thought about a cooking app',
+  'This is a thought about poker',
+  'This is a thought about deliveries',
 ];
 
-const possibleTags = [
-  'html',
-  'css',
-  'javascript',
-  'typescript',
-  'go',
-  'cpp',
-  'python',
-  'rust',
-  'React',
-  'React Native',
-  'NextJS',
-  'Tailwind',
-  'Vue',
-  'mongodb',
-  'sql',
+
+const possibleReactions = [
+  '👍',
+  '👎',
+  '❤️',
+  '😂',
+  '😯',
+  '😢',
+  '😡',
 ];
+
+  
 
 // Get a random item given an array
 const getRandomArrItem = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
@@ -115,28 +56,27 @@ const getRandomName = () =>
   `${getRandomArrItem(names)} ${getRandomArrItem(names)}`;
 
 // Function to generate random applications that we can add to the database. Includes application tags.
-const getRandomApplications = (int: number) => {
+const getRandomThoughts = (int: number) => {
   let results = [];
   for (let i = 0; i < int; i++) {
     results.push({
       published: Math.random() < 0.5,
-      description: getRandomArrItem(appDescriptions),
+      description: getRandomArrItem(ThoughtDescription),
       buildSuccess: Math.random() < 0.5,
-      tags: [...getApplicationTags(3)],
+      tags: [...Array(Math.floor(Math.random() * 3) + 1)].map(() =>
+        getRandomArrItem(ThoughtDescription)
+      ),
     });
   }
   return results;
 };
 
-// Create the tags that will be added to each application
-const getApplicationTags = (int: number) => {
-  if (int === 1) {
-    return getRandomArrItem(possibleTags);
-  }
-  const results = [];
+//create a function to generate random reactions
+const getReactions = (int: number) => {
+  let results = [];
   for (let i = 0; i < int; i++) {
     results.push({
-      tagBody: getRandomArrItem(possibleTags),
+      reactionBody: getRandomArrItem(possibleReactions),
       username: getRandomName(),
     });
   }
@@ -144,4 +84,4 @@ const getApplicationTags = (int: number) => {
 };
 
 // Export the functions for use in seed.js
-export { getRandomName, getRandomApplications };
+export { getRandomName, getRandomThoughts, getReactions };
