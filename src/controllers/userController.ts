@@ -58,3 +58,62 @@ import { Request, Response } from 'express';
     }
   }
 
+
+
+   //update a user
+    export const updateUser = async (req: Request, res: Response) => {
+      try {
+        const user = await User.findOneAndUpdate(
+          { _id: req.params.userId },
+
+          req.body,
+          { new: true, runValidators: true }
+        );
+        
+        if (!user) {
+          return res.status(404).json({ message: 'No user with that ID' });
+        }
+        res.json(user);
+        return
+
+      } catch (err) {
+        res.status(500).json(err);
+        return;
+      }
+    }
+
+
+export const addFriend = async (req: Request, res: Response) => {
+  try {
+    const user = await User.findOneAndUpdate(
+      { _id: req.params.userId },
+      { $addToSet: { friends: req.params.friendId } },
+      { new: true }
+    );
+
+    if (!user) {
+    res.status(404).json({ message: 'No user with that ID' });
+    return;
+    }
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json(err);
+    return;
+  }
+}
+ 
+export const deleteFriend = async (req: Request, res: Response) => {
+  try {
+    const user = await User.findOneAndUpdate(
+      { _id: req.params.userId },
+      { $pull: { friends: req.params.friendId } },
+      { new: true }
+    );
+    res.json(user);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+}
+
+

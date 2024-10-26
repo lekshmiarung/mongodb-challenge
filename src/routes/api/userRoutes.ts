@@ -11,7 +11,7 @@ import {
   updateUser,
   deleteUser,
   addFriend,
-  removeFriend,
+ deleteFriend 
 } from '../../controllers/userController'
 
 
@@ -25,7 +25,7 @@ router.delete('/api/users/:userId', deleteUser);
 
 // New routes for managing friends
 router.post('/api/users/:userId/friends/:friendId', addFriend);
-router.delete('/api/users/:userId/friends/:friendId', removeFriend);
+router.delete('/api/users/:userId/friends/:friendId', deleteFriend);
 
 export default router;
 
