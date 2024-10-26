@@ -1,7 +1,9 @@
 import User from './User.js';
 import Thought from './Thought.js';
-export { User, Thought };
-//
+import Reaction from './Reaction.js'
+export { User, Thought,Reaction };
+
+
 // export default router;
 
 
