@@ -1,15 +1,15 @@
 import connection from '../config/connection.js';
-import { User, Thought} from '../models/index.js';
-import { getRandomName, getRandomThoughts} from './data.js';
+import { User,Thought} from '../models/index.js';
+import { getRandomName, getRandomThoughts } from './data.js';
 
 connection.on('error', (err) => err);
 
 connection.once('open', async () => {
   console.log('connected');
   // Delete the collections if they exist
-  let applicationCheck = await connection.db?.listCollections({ name: 'applications' }).toArray();
+  let applicationCheck = await connection.db?.listCollections({ name: 'thoughts' }).toArray();
   if (applicationCheck?.length) {
-    await connection.dropCollection('applications');
+    await connection.dropCollection('thoughts');
   }
   
   let userCheck = await connection.db?.listCollections({ name: 'users' }).toArray();
@@ -18,7 +18,7 @@ connection.once('open', async () => {
   }
 
   const users = [];
-  const thoughts = getRandomThoughts(10);
+  const thoughts = getRandomThoughts(20);
 
   for (let i = 0; i < 20; i++) {
     const fullName = getRandomName();
@@ -38,6 +38,7 @@ connection.once('open', async () => {
   // loop through the saved applications, for each application we need to generate a application response and insert the application responses
   console.table(users);
   console.table(thoughts);
+
   console.info('Seeding complete! 🌱');
   process.exit(0);
 });
