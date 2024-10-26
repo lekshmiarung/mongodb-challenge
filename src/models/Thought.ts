@@ -6,13 +6,13 @@ export interface IReaction {
   reactionId: Types.ObjectId;
   reactionBody: string;
   username: string;
-  createdAt: Date;
+  createdAt: Date | string;
 }
 
 // Thought Interface
 export interface IThought extends Document {
   thoughtText: string;
-  createdAt: Date;
+  createdAt: Date | string;
   username: string;
   reactions: IReaction[];
   reactionCount?: number;
@@ -66,7 +66,7 @@ const thoughtSchema = new Schema<IThought>(
       type: String,
       required: true,
     },
-    reactions: [reactionSchema],  // Array of reaction subdocuments
+    reactions: [reactionSchema],
   },
   {
     toJSON: {
@@ -77,11 +77,10 @@ const thoughtSchema = new Schema<IThought>(
   }
 );
 
-// Virtual to count reactions
-thoughtSchema.virtual('reactionCount').get(function (this: IThought) {
+// Virtual for reaction count
+thoughtSchema.virtual('reactionCount').get(function () {
   return this.reactions.length;
 });
-
-const Thought = model<IThought>('Thought', thoughtSchema);
-
+  const Thought = model<IThought>('Thought', thoughtSchema);
 export default Thought;
+   

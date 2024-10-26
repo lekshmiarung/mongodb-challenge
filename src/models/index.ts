@@ -1,5 +1,7 @@
 import User from './User.js';
-import Tag from './Tag.js';
-import Application from './Application.js';
+import Thought from './Thought.js';
+export { User, Thought };
+//
+// export default router;
 
-export { User, Application, Tag };
+

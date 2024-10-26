@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
-import Thought from '../models/Thought';
-import User from '../models/User';
+import { Thought,User } from '../models/index.js';
 
 // Get all thoughts
 export const getThoughts = async (_req: Request, res: Response): Promise<void> => {
@@ -27,23 +26,42 @@ export const getSingleThought = async (req: Request, res: Response): Promise<voi
 };
 
 // Create a new thought and associate it with a user
-export const createThought = async (req: Request, res: Response): Promise<void> => {
+
+export const createApplication = async (req: Request, res: Response) => {
   try {
-    const { thoughtText, username, userId } = req.body;
-    const thought = await Thought.create({ thoughtText, username });
+    const application = await Thought.create(req.body);//it creates a new application by 
+    //using the Application model and the request body
+    const user = await User.findOneAndUpdate(
+      { _id: req.body.userId },
+      { $addToSet: { applications: application._id } },
+      { new: true }
+    );
 
-    await User.findByIdAndUpdate(userId, { $push: { thoughts: thought._id } });
+    if (!user) {
+      return res.status(404).json({
+        message: 'Application created, but found no user with that ID',
+      })
+    }
 
-    res.json(thought);
+    res.json('Created the application 🎉');
+    return;
   } catch (err) {
+    console.log(err);
     res.status(500).json(err);
+    return;
   }
-};
+}
+    
+
+  
 
 // Update a thought by its _id
 export const updateThought = async (req: Request, res: Response): Promise<void> => {
   try {
-    const thought = await Thought.findByIdAndUpdate(req.params.thoughtId, req.body, { new: true });
+    const thought = await Thought.findByIdAndUpdate(
+      {_id:req.params.thoughtId}, 
+      {$set:req.body},
+       { new: true });
     if (!thought) {
       res.status(404).json({ message: 'No thought with that ID' });
       return;
