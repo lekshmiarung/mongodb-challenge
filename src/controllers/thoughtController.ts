@@ -27,7 +27,7 @@ export const getSingleThought = async (req: Request, res: Response): Promise<voi
 
 // Create a new thought and associate it with a user
 
-export const createApplication = async (req: Request, res: Response) => {
+export const createThought = async (req: Request, res: Response) => {
   try {
     const application = await Thought.create(req.body);//it creates a new application by 
     //using the Application model and the request body
