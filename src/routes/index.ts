@@ -1,11 +1,9 @@
 import { Router } from 'express';
 const router = Router();
-import apiRoutes from './api/index.js';
+import thoughtRoutes from './api/thoughtRoutes.js';
+import userRoutes from './api/userRoutes.js';
 
-router.use('/api', apiRoutes);
-
-router.use((_req, res) => {
-  return res.send('Wrong route!');
-});
+router.use('/thoughts', thoughtRoutes);
+router.use('/users', userRoutes);
 
 export default router;

@@ -1,87 +1,81 @@
-const names = [
-  'John',
-  'Jane',
-  'Alice',
-  'Bob',
-  'Charlie',
-  'David',
-  'Eve',
-  'Frank',
-  'Grace',
-  'Heidi'
+import { faker } from '@faker-js/faker';
+
+
+
+const users = [
+  { id: "1", username: "John Doe", email: "john@example.com", friends:[], thoughts: [] },
+  { id: "2", username: "John James", email: "james@example.com",friends:[], thoughts: [] },
+  { id: "3", username: "Jack", email: "jack@example.com", friends:[], thoughts: [] },
+  { id: "4", username: "Smith", email: "smith@example.com", friends:[], thoughts: [] },
+  { id: "5", username: "Liza", email: "liza@example.com" ,  friends:[]},
 ];
 
-
-// create thought text
-
-const ThoughtDescription = [
-  'This is a thought about a decision tracker',
-  'This is a thought about finding my phone',
-  'This is a thought about learning piano',
-  'This is a thought about a starbase defender',
-  'This is a thought about a tower defense',
-  'This is a thought about a monopoly money manager',
-  'This is a thought about movie trailers',
-  'This is a thought about hello world',
-  'This is a thought about a stupid social media app',
-  'This is a thought about notes',
-  'This is a thought about messages',
-  'This is a thought about email',
-  'This is a thought about a compass',
-  'This is a thought about Firefox',
-  'This is a thought about a running app',
-  'This is a thought about a cooking app',
-  'This is a thought about poker',
-  'This is a thought about deliveries',
+const thoughts= [
+  { thoughtText: "This is a thought!", username: "John Doe" },
+  { thoughtText: "This is another thought!", username: "John James" },
+  { thoughtText: "This is a third thought!", username: "Jack" },
+  { thoughtText: "This is a fourth thought!", username: "Smith" },
+  { thoughtText: "This is a fifth thought!", username: "Liza" },
 ];
 
-
-const possibleReactions = [
-  '👍',
-  '👎',
-  '❤️',
-  '😂',
-  '😯',
-  '😢',
-  '😡',
+const reactions = [
+  { reactionBody: "😆", username:'john Doe'},
+  {  reactionBody: "❤️",  username:'john James'},
+  {reactionBody: "🚀",   username:'jaaack'},
 ];
 
   
+const getRandomArrayElement = (arr: any[]) => {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
 
-// Get a random item given an array
-const getRandomArrItem = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
+//get a random user
+const randomUsers = () => {
+  return users;
+}
 
-// Gets a random full name
-const getRandomName = () =>
-  `${getRandomArrItem(names)} ${getRandomArrItem(names)}`;
 
-// Function to generate random applications that we can add to the database. Includes application tags.
-const getRandomThoughts = (int: number) => {
-  let results = [];
-  for (let i = 0; i < int; i++) {
-    results.push({
-      published: Math.random() < 0.5,
-      description: getRandomArrItem(ThoughtDescription),
-      buildSuccess: Math.random() < 0.5,
-      tags: [...Array(Math.floor(Math.random() * 3) + 1)].map(() =>
-        getRandomArrItem(ThoughtDescription)
-      ),
-    });
+
+
+
+
+
+
+
+//Function to generate random thoughts that we can add to the database. Includes reaction data.
+const generateRandomThought = (userId: string) => {
+  // Get a random user
+  const user = users.find((user) => user.id === userId);
+  // Create a new thought
+  const thought = {
+    id: String(thoughts.length + 1),
+    thoughtText: faker.lorem.sentence(),
+    username: user?.username,
+    createdAt: faker.date.recent(),
+  };
+  thoughts.push(thought as any);
+
+// Create the reactions that will be added to each thought
+  // Add reactions to the thought
+  const reactionCount = Math.floor(Math.random() * 4);
+  for (let i = 0; i < reactionCount; i++) {
+    const reaction = {
+      id: String(reactions.length + 1),
+      reactionBody: getRandomArrayElement(["😆", "❤️", "🚀", "💯"]),
+      thoughtId: thought.id,
+      username: getRandomArrayElement(users).username,
+    };
+    reactions.push(reaction);
   }
-  return results;
+  return thought;
 };
 
-//create a function to generate random reactions
-const getReactions = (int: number) => {
-  let results = [];
-  for (let i = 0; i < int; i++) {
-    results.push({
-      reactionBody: getRandomArrItem(possibleReactions),
-      username: getRandomName(),
-    });
-  }
-  return results;
-};
+// Generate random thoughts
+for (let i = 0; i < 5; i++) {
+  generateRandomThought(getRandomArrayElement(users).id);
+}
 
-// Export the functions for use in seed.js
-export { getRandomName, getRandomThoughts, getReactions };
+
+export { getRandomArrayElement, randomUsers, generateRandomThought };
+
+

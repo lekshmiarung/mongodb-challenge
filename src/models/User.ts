@@ -1,74 +1,57 @@
- import { Schema, model, Document, ObjectId } from 'mongoose';
 
+import mongoose, { Schema, Document } from 'mongoose';
 
-
-// **User**:
-
-// * `username`
-//   * String
-//   * Unique
-//   * Required
-//   * Trimmed
-
-// * `email`
-//   * String
-//   * Required
-//   * Unique
-//   * Must match a valid email address (look into Mongoose's matching validation)
-
-// * `thoughts`
-//   * Array of `_id` values referencing the `Thought` model
-
-// * `friends`
-//   * Array of `_id` values referencing the `User` model (self-reference)
- interface IUser extends Document {
-    username: string;
-    email: string;
-    thoughts: ObjectId[];
-    friends: ObjectId[];
+// Define the User interface for TypeScript
+interface IUser extends Document {
+  username: string;
+  email: string;
+  thoughts: mongoose.Types.ObjectId[];  // Array of ObjectIds referencing Thought
+  friends: mongoose.Types.ObjectId[]; 
+    // Array of ObjectIds referencing User
+    friendCount: number;  // Virtual that retrieves the length of the user's friends array
 }
-  //SCHEMA
-  const userSchema = new Schema<IUser>({
-      username: {
-          type: String,
-          required: true,
-          unique: true,
-          trim: true
-      },
-      email: {
-          type: String,
-          required: true,
-          unique: true,
-          match: [/.+@.+\..+/, 'Please enter a valid email address']
-      },
-      thoughts: [
-          {
-              type: Schema.Types.ObjectId,
-              ref: 'Thought'
-          }
-      ],
-      friends: [
-          {
-              type: Schema.Types.ObjectId,
-              ref: 'User'
-          }
-      ]
+
+// User Schema definition
+const UserSchema = new Schema<IUser>({
+  username: {
+    type: String,
+    unique: true,
+    required: true,
+    trim: true
   },
-  {
-      toJSON: {
-          virtuals: true
-      },
-      id: false
-  }
-  );
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    match: [/.+@.+\..+/, 'Must match a valid email address']
+  },
+  thoughts: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Thought'  // References the Thought model
+    }
+  ],
+  friends: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'User'  // Self-reference to User model
+    }
+  ]
+},
+{
+  toJSON: {
+    virtuals: true,
+  },
+  id: false
+});
 
+// Virtual to calculate friend count
+UserSchema.virtual('friendCount').get(function() {
+  return this.friends.length;
+});
 
- //// Virtuals for friend count
-  userSchema.virtual('friendCount').get(function() {
-      return this.friends.length;
-  });
-  
-  // create the User model using the UserSchema
-  const User = model<IUser>('User', userSchema);
+// Export the User model
+export const User = mongoose.model<IUser>('User', UserSchema);
+ 
 
-  export default User;
+export default User;

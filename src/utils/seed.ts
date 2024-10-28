@@ -1,14 +1,18 @@
 import connection from '../config/connection.js';
-import { User,Thought} from '../models/index.js';
-import { getRandomName, getRandomThoughts } from './data.js';
+//import reactionSchema from '../models/Reaction.js';
+import { User, Thought } from '../models/index.js';
+
+import { randomUsers,
+   generateRandomThought ,
+  } from '../utils/data.js';
 
 connection.on('error', (err) => err);
 
 connection.once('open', async () => {
   console.log('connected');
   // Delete the collections if they exist
-  let applicationCheck = await connection.db?.listCollections({ name: 'thoughts' }).toArray();
-  if (applicationCheck?.length) {
+  let thoughtCheck = await connection.db?.listCollections({ name: 'thoughts' }).toArray();
+  if (thoughtCheck?.length) {
     await connection.dropCollection('thoughts');
   }
   
@@ -17,28 +21,38 @@ connection.once('open', async () => {
     await connection.dropCollection('users');
   }
 
-  const users = [];
-  const thoughts = getRandomThoughts(20);
+  const users = randomUsers();
+  const thoughts = [];
+  for (let i=0; i<users.length; i++) {
+    thoughts.push(generateRandomThought(users[i].id));
 
-  for (let i = 0; i < 20; i++) {
-    const fullName = getRandomName();
-    const first = fullName.split(' ')[0];
-    const last = fullName.split(' ')[1];
-
-    users.push({
-      first,
-      last,
-      age: Math.floor(Math.random() * (99 - 18 + 1) + 18),
-    });
   }
+  const friends = [];
+  for (let i=0; i<users.length; i++) {
+    friends.push(generateRandomThought(users[i].id));
+
+  }
+  
+
+
+  // Insert the users and thoughts into the database
+  console.log(users);
+  console.log(thoughts);
+
 
   await User.insertMany(users);
   await Thought.insertMany(thoughts);
 
+
+//insert the friends into the database
+await User.insertMany(friends);
+
   // loop through the saved applications, for each application we need to generate a application response and insert the application responses
   console.table(users);
-  console.table(thoughts);
 
+  console.table(thoughts);
+  console.table(friends);
+ 
   console.info('Seeding complete! 🌱');
   process.exit(0);
 });
