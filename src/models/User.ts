@@ -34,7 +34,7 @@ const UserSchema = new Schema<IUser>({
   friends: [
     {
       type: Schema.Types.ObjectId,
-      ref: 'User'  // Self-reference to User model
+      ref: 'User'  // Self-reference to User model menas that a user can be friends with other users
     }
   ]
 },

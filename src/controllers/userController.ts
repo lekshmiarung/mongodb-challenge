@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { User } from '../models/index.js';
+import { User,Thought } from '../models/index.js';
 
 
 
@@ -10,19 +10,20 @@ export const getUsers = async (_req: Request, res: Response) => {
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch users', details: error });
-  } return;
+  } 
 };
 
 // Get a single user by ID, populating thoughts and friends
 export const getUserById = async (req: Request, res: Response) => {
   try {
-    const user = await User.findById(req.params.userId).populate('thoughts').populate('friends');
+    const user = await User.findById(req.params.userId).populate('thoughts').populate('friends').select('-__v');
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
     res.json(user);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch user', details: error });
+    res.status(500).json(error);
   } return;
 
 };
@@ -40,7 +41,7 @@ export const createUser = async (req: Request, res: Response) => {
 // Update a user by ID
 export const updateUser = async (req: Request, res: Response) => {
   try {
-    const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updatedUser = await User.findByIdAndUpdate(req.params.userId, req.body, { new: true });
     if (!updatedUser) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -53,15 +54,21 @@ export const updateUser = async (req: Request, res: Response) => {
 // Delete a user by ID
 export const deleteUser = async (req: Request, res: Response) => {
   try {
-    const deletedUser = await User.findByIdAndDelete(req.params.id);
-    if (!deletedUser) {
+    const user = await User.findOneAndDelete({_id:req.params.userId});
+    if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.json({ message: 'User deleted successfully', deletedUser });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to delete user', details: error });
-  } return;
-};
+
+  await Thought.deleteMany({ _id: { $in: user.thoughts } });
+  res.json ({ message: 'User and associated thoughts deleted successfully' });
+
+    return;
+    } catch (err) {
+      res.status(500).json(err);
+      return;
+    }
+  } 
+ 
 
 
 
@@ -69,24 +76,22 @@ export const deleteUser = async (req: Request, res: Response) => {
 export const addFriend = async (req: Request, res: Response) => {
   const { userId, friendId } = req.params;
   try {
-
     // Add the friend to the user's friends array only if it's not already there
     const user = await User.findByIdAndUpdate(
       userId,
       { $addToSet: { friends: friendId } },
+      //means that the friend is not already in the array
       { new: true }
-    ).populate('friends', 'username email');
-
+    ).select('-__v');
     if (!user) {
-      res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: 'User not found' });
     }
-
-    res.json({ message: 'Friend added successfully', user });
+    res.json({ message: 'Friend added successfully' });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ message: 'Error adding friend', error });
   } return;
-};
+}
+
 
 // Remove a friend from the user's friend list
 export const removeFriend = async (req: Request, res: Response) => {
@@ -96,7 +101,7 @@ export const removeFriend = async (req: Request, res: Response) => {
     // Remove the friend from the user's friends array
     const user = await User.findByIdAndUpdate(
       userId,
-      { $pull: { friends: friendId } },
+      { $pull: { friends: friendId } },//
       { new: true }
     ).populate('friends', 'username email');
 
@@ -104,24 +109,9 @@ export const removeFriend = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json({ message: 'Friend removed successfully', user });
+    res.json({ message: 'Friend removed successfully'});
   } catch (error) {
     res.status(500).json({ message: 'Error removing friend', error });
   } return;
 };
 
-
-// //how to add a friend to a user's friend list
-// //how to remove a friend from a user's friend list
-// //in insomnia
-// //how to add a friend to a user's friend list
-// //http://localhost:3001/api/users/60f3b9b3b3b3b3b3b3b3b3b/friends/60f3b9b3b3b3b3b3b3b3b3b
-// post request
-// //how to remove a friend from a user's friend list
-// //http://localhost:3001/api/users/60f3b9b3b3b3b3b3b3b3b3b/friends/60f3b9b3b3b3b3b3b3b3b3b
-// //json body for adding a friend
-// //json body for removing a friend
-// //{
-// //  "username": "John Doe",
-// //  "email": "
-// }

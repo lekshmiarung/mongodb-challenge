@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": "./" /* Base directory to resolve non-absolute module names. */,
     /* Language and Environment */
     "target": "ES2020" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
 
@@ -33,5 +34,5 @@
     "noImplicitOverride": true /* Ensure overriding members in derived classes are marked with an override modifier. */,
     "useUnknownInCatchVariables": true /* Ensure 'unknown' is used for catch clause variables. */
   },
-  "include": ["src"]
+  "include": ["./src"]
 }
